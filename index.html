@@ -1,0 +1,820 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+      <meta name="color-scheme" content="light" />
+      <title>你想先看哪个示例？</title>
+      <style>
+      :root {
+        --bg: #eef4fb;
+        --bg2: #ddebf8;
+        --panel: rgba(255, 255, 255, 0.92);
+        --panel-strong: rgba(255, 255, 255, 0.98);
+        --text: #102033;
+        --muted: #5c6b7d;
+        --line: rgba(16, 32, 51, 0.1);
+        --accent: #1769d1;
+        --accent-2: #12a7b8;
+        --success: #178a57;
+        --shadow: 0 22px 55px rgba(20, 50, 90, 0.12);
+        --radius-xl: 30px;
+        --radius-lg: 22px;
+        --radius-md: 16px;
+        --max: 1440px;
+      }
+
+      * { box-sizing: border-box; }
+      html, body { margin: 0; min-height: 100%; }
+      body {
+        color: var(--text);
+        font-family: "STSong", "Songti SC", "Noto Serif SC", "Source Han Serif SC", serif;
+        background:
+          radial-gradient(circle at 14% 16%, rgba(23, 105, 209, 0.14), transparent 24%),
+          radial-gradient(circle at 86% 14%, rgba(18, 167, 184, 0.14), transparent 22%),
+          radial-gradient(circle at 20% 82%, rgba(23, 138, 87, 0.1), transparent 28%),
+          linear-gradient(135deg, var(--bg), var(--bg2));
+        overflow-x: hidden;
+      }
+
+      body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        background-image:
+          linear-gradient(rgba(255, 255, 255, 0.12) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(255, 255, 255, 0.12) 1px, transparent 1px);
+        background-size: 56px 56px;
+        opacity: 0.35;
+        mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.26), transparent 86%);
+      }
+
+      .shell {
+        position: relative;
+        max-width: var(--max);
+        margin: 0 auto;
+        padding: 20px 16px 24px;
+      }
+
+      .layout {
+        display: grid;
+        grid-template-columns: minmax(0, 1.16fr) minmax(360px, 0.84fr);
+        gap: 18px;
+        align-items: start;
+      }
+
+      .panel {
+        background: var(--panel);
+        backdrop-filter: blur(18px);
+        border: 1px solid rgba(255, 255, 255, 0.85);
+        border-radius: var(--radius-xl);
+        box-shadow: var(--shadow);
+      }
+
+      .main {
+        padding: 24px;
+        min-height: 92vh;
+      }
+
+      .side {
+        padding: 22px;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+
+      .topline,
+      .section-head,
+      .status-row,
+      .card-head,
+      .row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+      }
+
+      .eyebrow,
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 12px;
+        border-radius: 999px;
+        border: 1px solid rgba(55, 40, 28, 0.1);
+        background: rgba(255, 255, 255, 0.68);
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      .eyebrow::before,
+      .pill::before {
+        content: "";
+        width: 9px;
+        height: 9px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--accent), var(--accent-2));
+        box-shadow: 0 0 0 4px rgba(23, 105, 209, 0.12);
+      }
+
+      .hero {
+        margin-top: 14px;
+      }
+
+      h1 {
+        margin: 14px 0 10px;
+        font-size: clamp(40px, 5.5vw, 86px);
+        line-height: 0.92;
+        letter-spacing: -0.055em;
+        font-weight: 800;
+      }
+
+      .sub {
+        margin: 0;
+        max-width: 64ch;
+        color: var(--muted);
+        font-size: clamp(16px, 1.6vw, 19px);
+        line-height: 1.7;
+      }
+
+      .status-row {
+        flex-wrap: wrap;
+        justify-content: flex-start;
+        margin-top: 18px;
+      }
+
+      .chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 14px;
+        border-radius: 999px;
+        border: 1px solid rgba(55, 40, 28, 0.1);
+        background: rgba(255, 255, 255, 0.72);
+        font-size: 14px;
+      }
+
+      .chip strong {
+        font-size: 16px;
+      }
+
+      .chip.live {
+        color: var(--success);
+        border-color: rgba(23, 138, 87, 0.2);
+        background: rgba(23, 138, 87, 0.08);
+      }
+
+      .banner {
+        margin-top: 18px;
+        padding: 14px 16px;
+        border-radius: var(--radius-lg);
+        border: 1px solid rgba(55, 40, 28, 0.1);
+        background: rgba(255, 255, 255, 0.72);
+        color: var(--muted);
+        line-height: 1.65;
+        font-size: 14px;
+      }
+
+      .banner strong {
+        color: var(--text);
+      }
+
+      .section {
+        margin-top: 18px;
+      }
+
+      .section-head {
+        align-items: end;
+        margin-bottom: 14px;
+      }
+
+      .section-head h2,
+      .side h2 {
+        margin: 0;
+        font-size: 22px;
+        letter-spacing: -0.03em;
+      }
+
+      .section-head p,
+      .side p,
+      .card-head p {
+        margin: 4px 0 0;
+        color: var(--muted);
+        font-size: 14px;
+        line-height: 1.5;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+      }
+
+      .tool {
+        position: relative;
+        text-align: left;
+        padding: 15px 15px 16px;
+        border-radius: 18px;
+        border: 1px solid rgba(55, 40, 28, 0.12);
+        background: rgba(255, 255, 255, 0.9);
+        color: var(--text);
+        overflow: hidden;
+      }
+
+      .tool h3 {
+        margin: 12px 0 6px;
+        font-size: 17px;
+        line-height: 1.35;
+        letter-spacing: -0.02em;
+      }
+
+      .tool .num {
+        display: inline-grid;
+        place-items: center;
+        width: 30px;
+        height: 30px;
+        border-radius: 999px;
+        background: rgba(23, 105, 209, 0.12);
+        color: var(--accent);
+        font-weight: 800;
+        font-size: 13px;
+      }
+
+      .tool .meta {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        margin-top: 12px;
+      }
+
+      .count {
+        display: inline-flex;
+        align-items: baseline;
+        gap: 5px;
+      }
+
+      .count strong {
+        font-size: 28px;
+        line-height: 1;
+      }
+
+      .count span {
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      .tool .desc {
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.5;
+      }
+
+      .tool .actions {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr);
+        gap: 8px;
+        margin-top: 12px;
+      }
+
+      .btn {
+        appearance: none;
+        border: 0;
+        border-radius: 14px;
+        padding: 11px 12px;
+        font: inherit;
+        font-weight: 700;
+        cursor: pointer;
+        transition: transform 180ms ease, opacity 180ms ease, box-shadow 180ms ease;
+      }
+
+      .btn:hover { transform: translateY(-1px); }
+      .btn.primary {
+        background: linear-gradient(135deg, var(--accent), var(--accent-2));
+        color: #fff8ef;
+        box-shadow: 0 16px 30px rgba(23, 105, 209, 0.22);
+      }
+      .btn.secondary {
+        background: rgba(255, 255, 255, 0.9);
+        border: 1px solid rgba(55, 40, 28, 0.12);
+        color: var(--text);
+      }
+      .btn.ghost {
+        background: transparent;
+        border: 1px dashed rgba(55, 40, 28, 0.18);
+        color: var(--muted);
+      }
+      .btn:disabled {
+        opacity: 0.55;
+        cursor: not-allowed;
+        transform: none;
+      }
+
+      .rankings {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .rank {
+        position: relative;
+        display: grid;
+        grid-template-columns: 54px minmax(0, 1fr) auto;
+        align-items: center;
+        gap: 14px;
+        padding: 15px 16px;
+        border-radius: 18px;
+        border: 1px solid rgba(55, 40, 28, 0.08);
+        background: rgba(255, 255, 255, 0.82);
+        overflow: hidden;
+      }
+
+      .rank::before {
+        content: "";
+        position: absolute;
+        inset: auto auto 0 0;
+        width: calc(var(--pct) * 1%);
+        height: 4px;
+        background: linear-gradient(90deg, var(--accent), var(--accent-2));
+      }
+
+      .no {
+        width: 54px;
+        height: 54px;
+        border-radius: 18px;
+        display: grid;
+        place-items: center;
+        background: linear-gradient(135deg, rgba(23, 105, 209, 0.14), rgba(18, 167, 184, 0.12));
+        color: var(--accent);
+        font-weight: 800;
+        font-size: 20px;
+      }
+
+      .rank h3 {
+        margin: 0;
+        font-size: 18px;
+        line-height: 1.25;
+      }
+
+      .rank .info {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 8px;
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      .value {
+        text-align: right;
+        min-width: 88px;
+      }
+
+      .value strong {
+        display: block;
+        font-size: 30px;
+        line-height: 1;
+      }
+
+      .value span {
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      .card {
+        padding: 16px;
+        border-radius: var(--radius-lg);
+        border: 1px solid rgba(16, 32, 51, 0.08);
+        background: rgba(255, 255, 255, 0.72);
+      }
+
+      .summary {
+        display: grid;
+        gap: 10px;
+      }
+
+      .summary-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 12px 14px;
+        border-radius: 14px;
+        background: rgba(255, 255, 255, 0.7);
+        border: 1px solid rgba(16, 32, 51, 0.08);
+      }
+
+      .summary-item b {
+        font-size: 15px;
+      }
+
+      .summary-item span {
+        color: var(--muted);
+        font-size: 13px;
+        white-space: nowrap;
+      }
+
+      .footer {
+        margin-top: 18px;
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.6;
+      }
+
+      .toast {
+        position: fixed;
+        left: 50%;
+        bottom: 22px;
+        transform: translateX(-50%) translateY(18px);
+        opacity: 0;
+        pointer-events: none;
+        background: rgba(16, 32, 51, 0.96);
+        color: #fff;
+        padding: 12px 16px;
+        border-radius: 999px;
+        box-shadow: 0 16px 30px rgba(0, 0, 0, 0.18);
+        transition: opacity 180ms ease, transform 180ms ease;
+      }
+
+      .toast.show {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+      }
+
+      @media (max-width: 1120px) {
+        .layout { grid-template-columns: 1fr; }
+        .main { min-height: auto; }
+      }
+
+      @media (max-width: 720px) {
+        .shell { padding: 12px; }
+        .main, .side { padding: 16px; border-radius: 24px; }
+        .grid { grid-template-columns: 1fr; }
+        .rank { grid-template-columns: 46px minmax(0, 1fr); }
+        .value {
+          grid-column: 1 / -1;
+          text-align: left;
+          display: flex;
+          align-items: baseline;
+          justify-content: space-between;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="shell">
+      <div class="layout">
+        <section class="panel main">
+          <div class="topline">
+            <div class="eyebrow">离线稳妥版 · 直接打开就能演示</div>
+            <div class="pill">无需扫码 / 无需 server.js / 无需联网</div>
+          </div>
+
+          <header class="hero">
+            <h1>你想先看哪个示例？</h1>
+            <p class="sub">
+              这是一版最稳妥的现场演示页，适合直接打开 `index.html` 使用。它不依赖本地服务、不依赖二维码、不依赖外部接口，重点只保留投票、排行和主持人确认。
+            </p>
+          </header>
+
+          <div class="status-row">
+            <div class="chip live">状态：<strong id="statusText">未开始</strong></div>
+            <div class="chip">总票数：<strong id="voteTotal">0</strong></div>
+            <div class="chip">当前领先：<strong id="leaderText">等待开始</strong></div>
+            <div class="chip">结果：<strong id="confirmText">未确认</strong></div>
+          </div>
+
+          <div class="banner" id="banner">
+            <strong>演示建议：</strong>先点“开始演示”，然后在工具卡上点一下投票，再点一次取消。演示结束后点“确认当前排行”，再把顺序讲完。
+          </div>
+
+          <div class="section">
+            <div class="section-head">
+              <div>
+                <h2>投票区</h2>
+                <p>点一下投票，再点一次取消，界面保持最简单。</p>
+              </div>
+              <div class="pill" id="modePill">离线本地模式</div>
+            </div>
+            <div class="grid" id="toolGrid"></div>
+          </div>
+
+          <div class="section">
+            <div class="section-head">
+              <div>
+                <h2>实时得票排行</h2>
+                <p>默认按票数从高到低排序，平票时按编号排列。</p>
+              </div>
+              <div class="pill">主持人确认后，再按这个顺序讲解</div>
+            </div>
+            <div class="rankings" id="rankingList" aria-live="polite"></div>
+          </div>
+
+          <div class="footer">
+            如果你后面还想恢复扫码投票，我们可以再做一个联网版；但如果目标是“演示时绝不掉链子”，这一版更稳。
+          </div>
+        </section>
+
+        <aside class="panel side">
+          <section class="card">
+            <div class="card-head">
+              <div>
+                <h2>主持人控制</h2>
+                <p>这版只保留最少按钮，避免现场出问题。</p>
+              </div>
+            </div>
+            <div class="row" style="margin-top: 14px;">
+              <button class="btn primary" id="startBtn">开始演示</button>
+              <button class="btn secondary" id="endBtn">结束演示</button>
+            </div>
+            <div class="row" style="margin-top: 10px;">
+              <button class="btn secondary" id="confirmBtn">确认当前排行</button>
+              <button class="btn ghost" id="resetBtn">清空重来</button>
+            </div>
+            <div class="row" style="margin-top: 10px;">
+              <button class="btn secondary" id="copyBtn">复制结果</button>
+            </div>
+          </section>
+
+          <section class="card">
+            <div class="card-head">
+              <div>
+                <h2>主持人摘要</h2>
+                <p>快速看当前局面，现场不会慌。</p>
+              </div>
+            </div>
+            <div class="summary" id="summaryList"></div>
+          </section>
+
+          <section class="card">
+            <div class="card-head">
+              <div>
+                <h2>稳定提示</h2>
+                <p>这一版最适合临场展示。</p>
+              </div>
+            </div>
+            <div class="banner" style="margin-top: 12px;">
+              <strong>建议打开方式：</strong><br />
+              直接双击 `index.html` 或者用浏览器打开本地文件，不需要启动任何服务。
+            </div>
+          </section>
+        </aside>
+      </div>
+    </main>
+
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+    <script>
+      const tools = [
+        { id: 1, name: "报价单生成器", hint: "快速出报价" },
+        { id: 2, name: "装箱计算器 / 柜型建议器", hint: "算体积与装柜" },
+        { id: 3, name: "质量计算小工具", hint: "快速算参数" },
+        { id: 4, name: "铭牌参数生成器", hint: "参数一键成文" },
+        { id: 5, name: "电子签报销单 + 对账工具", hint: "签单报销一体" },
+        { id: 6, name: "面试通知 + 流程管理工具", hint: "流程更顺" },
+        { id: 7, name: "制度问答小助手", hint: "查制度更快" },
+      ];
+
+      const STORAGE_KEY = "stable-vote-demo:v1";
+
+      const els = {
+        toolGrid: document.getElementById("toolGrid"),
+        rankingList: document.getElementById("rankingList"),
+        startBtn: document.getElementById("startBtn"),
+        endBtn: document.getElementById("endBtn"),
+        confirmBtn: document.getElementById("confirmBtn"),
+        resetBtn: document.getElementById("resetBtn"),
+        copyBtn: document.getElementById("copyBtn"),
+        statusText: document.getElementById("statusText"),
+        voteTotal: document.getElementById("voteTotal"),
+        leaderText: document.getElementById("leaderText"),
+        confirmText: document.getElementById("confirmText"),
+        summaryList: document.getElementById("summaryList"),
+        modePill: document.getElementById("modePill"),
+        banner: document.getElementById("banner"),
+        toast: document.getElementById("toast"),
+      };
+
+      const blankVotes = () => Object.fromEntries(tools.map((tool) => [tool.id, 0]));
+
+      const loadState = () => {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) {
+          return {
+            running: false,
+            confirmed: false,
+            votes: blankVotes(),
+          };
+        }
+        try {
+          const parsed = JSON.parse(raw);
+          return {
+            running: Boolean(parsed.running),
+            confirmed: Boolean(parsed.confirmed),
+            votes: { ...blankVotes(), ...(parsed.votes || {}) },
+          };
+        } catch {
+          return {
+            running: false,
+            confirmed: false,
+            votes: blankVotes(),
+          };
+        }
+      };
+
+      let state = loadState();
+
+      function saveState() {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      }
+
+      function toast(message) {
+        els.toast.textContent = message;
+        els.toast.classList.add("show");
+        clearTimeout(toast.timer);
+        toast.timer = setTimeout(() => els.toast.classList.remove("show"), 1500);
+      }
+
+      function totalVotes() {
+        return Object.values(state.votes).reduce((sum, value) => sum + value, 0);
+      }
+
+      function sortedTools() {
+        return [...tools].sort((a, b) => {
+          const diff = (state.votes[b.id] || 0) - (state.votes[a.id] || 0);
+          if (diff !== 0) return diff;
+          return a.id - b.id;
+        });
+      }
+
+      function leaderName() {
+        const ordered = sortedTools();
+        const top = ordered[0];
+        if (!top || (state.votes[top.id] || 0) === 0) return "等待开始";
+        return top.name;
+      }
+
+      function setStatusText() {
+        if (!state.running) return "未开始";
+        if (state.confirmed) return "已确认";
+        return "进行中";
+      }
+
+      function renderTools() {
+        els.toolGrid.innerHTML = tools
+          .map((tool) => {
+            const count = state.votes[tool.id] || 0;
+            return `
+              <article class="tool">
+                <span class="num">${tool.id}</span>
+                <h3>${tool.name}</h3>
+                <div class="desc">${tool.hint}</div>
+                <div class="meta">
+                  <span class="count"><strong>${count}</strong><span>票</span></span>
+                  <span class="pill">${count ? "已投" : state.running ? "点一下投票" : "先开始演示"}</span>
+                </div>
+                <div class="actions">
+                  <button class="btn primary" data-action="toggle" data-id="${tool.id}" ${state.running && !state.confirmed ? "" : "disabled"}>${count ? "取消投票" : "投票"}</button>
+                </div>
+              </article>
+            `;
+          })
+          .join("");
+
+        els.toolGrid.querySelectorAll("button[data-action]").forEach((button) => {
+          button.addEventListener("click", () => {
+            const id = Number(button.dataset.id);
+            const action = button.dataset.action;
+            if (action === "toggle") vote(id);
+          });
+        });
+      }
+
+      function renderRankings() {
+        const ordered = sortedTools();
+        const max = Math.max(1, ...ordered.map((tool) => state.votes[tool.id] || 0));
+
+        els.rankingList.innerHTML = ordered
+          .map((tool, index) => {
+            const count = state.votes[tool.id] || 0;
+            const pct = (count / max) * 100;
+            return `
+              <section class="rank" style="--pct:${Math.max(pct, count ? 8 : 0)}">
+                <div class="no">${index + 1}</div>
+                <div>
+                  <h3>${tool.name}</h3>
+                  <div class="info">
+                    <span>编号 ${tool.id}</span>
+                    <span>支持率 ${totalVotes() ? Math.round((count / totalVotes()) * 100) : 0}%</span>
+                  </div>
+                </div>
+                <div class="value">
+                  <strong>${count}</strong>
+                  <span>票</span>
+                </div>
+              </section>
+            `;
+          })
+          .join("");
+      }
+
+      function renderSummary() {
+        const items = [
+          ["演示状态", setStatusText()],
+          ["有效票数", String(totalVotes())],
+          ["当前领先", leaderName()],
+          ["确认状态", state.confirmed ? "已确认" : "未确认"],
+        ];
+
+        els.summaryList.innerHTML = items
+          .map(([label, value]) => `<div class="summary-item"><b>${label}</b><span>${value}</span></div>`)
+          .join("");
+
+        els.statusText.textContent = setStatusText();
+        els.voteTotal.textContent = String(totalVotes());
+        els.leaderText.textContent = leaderName();
+        els.confirmText.textContent = state.confirmed ? "已确认" : "未确认";
+        els.modePill.textContent = state.running ? "离线本地模式 · 可演示" : "离线本地模式 · 先开始";
+        els.banner.innerHTML = state.running
+          ? state.confirmed
+            ? "<strong>已确认当前顺序。</strong> 下面的排行就是最终讲解顺序。"
+            : "<strong>进行中：</strong> 点一下投票，再点一次取消；主持人最后再确认。"
+          : "<strong>未开始：</strong> 先点“开始演示”，再进行现场讲解。";
+      }
+
+      function vote(id) {
+        if (!state.running || state.confirmed) {
+          toast("先开始演示");
+          return;
+        }
+
+        const next = state.votes[id] ? 0 : 1;
+        if (next === (state.votes[id] || 0)) return;
+        state.votes[id] = next;
+        saveState();
+        render();
+        toast(next ? "已投票" : "已取消");
+      }
+
+      function startDemo() {
+        state.running = true;
+        state.confirmed = false;
+        saveState();
+        render();
+        toast("演示已开始");
+      }
+
+      function endDemo() {
+        state.running = false;
+        saveState();
+        render();
+        toast("演示已结束");
+      }
+
+      function confirmRanking() {
+        state.confirmed = true;
+        saveState();
+        render();
+        toast("已确认当前排行");
+      }
+
+      function resetDemo() {
+        state = {
+          running: false,
+          confirmed: false,
+          votes: blankVotes(),
+        };
+        saveState();
+        render();
+        toast("已清空");
+      }
+
+      async function copyResult() {
+        const text = sortedTools()
+          .map((tool, index) => `${index + 1}. ${tool.name}（${state.votes[tool.id] || 0} 票）`)
+          .join("\n");
+        try {
+          await navigator.clipboard.writeText(text);
+          toast("结果已复制");
+        } catch {
+          toast("复制失败，结果已显示在页面中");
+        }
+      }
+
+      function render() {
+        renderTools();
+        renderRankings();
+        renderSummary();
+      }
+
+      els.startBtn.addEventListener("click", startDemo);
+      els.endBtn.addEventListener("click", endDemo);
+      els.confirmBtn.addEventListener("click", confirmRanking);
+      els.resetBtn.addEventListener("click", resetDemo);
+      els.copyBtn.addEventListener("click", copyResult);
+
+      render();
+    </script>
+  </body>
+</html>
