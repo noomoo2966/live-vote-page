@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
       <meta name="color-scheme" content="light" />
-      <title>你想先看哪个示例？</title>
+    <title>扫码投票页 · 实时排行</title>
       <style>
       :root {
         --bg: #eef4fb;
@@ -467,14 +467,14 @@
       <div class="layout">
         <section class="panel main">
           <div class="topline">
-            <div class="eyebrow">离线稳妥版 · 直接打开就能演示</div>
-            <div class="pill">无需扫码 / 无需 server.js / 无需联网</div>
+            <div class="eyebrow">线上扫码投票 · 实时同步</div>
+            <div class="pill">扫码进入 / 实时排行 / 主持人确认</div>
           </div>
 
           <header class="hero">
-            <h1>你想先看哪个示例？</h1>
+            <h1>扫码先投票，主持人再确认顺序</h1>
             <p class="sub">
-              这是一版最稳妥的现场演示页，适合直接打开 `index.html` 使用。它不依赖本地服务、不依赖二维码、不依赖外部接口，重点只保留投票、排行和主持人确认。
+              台下观众扫码后即可投票，页面会实时同步得票排行。主持人最后确认讲解顺序，现场展示更直观。
             </p>
           </header>
 
@@ -486,16 +486,16 @@
           </div>
 
           <div class="banner" id="banner">
-            <strong>演示建议：</strong>先点“开始演示”，然后在工具卡上点一下投票，再点一次取消。演示结束后点“确认当前排行”，再把顺序讲完。
+            <strong>扫码提示：</strong>让观众扫描当前页面地址进入投票，投票结果会实时同步到这里。主持人可在最后确认最终讲解顺序。
           </div>
 
           <div class="section">
             <div class="section-head">
               <div>
                 <h2>投票区</h2>
-                <p>点一下投票，再点一次取消，界面保持最简单。</p>
+                <p>每人一票，点一下投票，再点一次取消投票。</p>
               </div>
-              <div class="pill" id="modePill">离线本地模式</div>
+              <div class="pill" id="modePill">扫码投票模式</div>
             </div>
             <div class="grid" id="toolGrid"></div>
           </div>
@@ -512,7 +512,7 @@
           </div>
 
           <div class="footer">
-            如果你后面还想恢复扫码投票，我们可以再做一个联网版；但如果目标是“演示时绝不掉链子”，这一版更稳。
+            这是线上扫码投票版，适合投屏和手机同时使用。观众扫码后直接参与，结果实时同步。
           </div>
         </section>
 
@@ -520,13 +520,13 @@
           <section class="card">
             <div class="card-head">
               <div>
-                <h2>主持人控制</h2>
-                <p>这版只保留最少按钮，避免现场出问题。</p>
+                <h2>主持人后台</h2>
+                <p>只保留必要控制，适合现场控场。</p>
               </div>
             </div>
             <div class="row" style="margin-top: 14px;">
-              <button class="btn primary" id="startBtn">开始演示</button>
-              <button class="btn secondary" id="endBtn">结束演示</button>
+              <button class="btn primary" id="startBtn">开始投票</button>
+              <button class="btn secondary" id="endBtn">结束投票</button>
             </div>
             <div class="row" style="margin-top: 10px;">
               <button class="btn secondary" id="confirmBtn">确认当前排行</button>
@@ -550,13 +550,16 @@
           <section class="card">
             <div class="card-head">
               <div>
-                <h2>稳定提示</h2>
-                <p>这一版最适合临场展示。</p>
+                <h2>扫码入口</h2>
+                <p>把这个地址发给观众，或做成二维码投屏展示。</p>
               </div>
             </div>
             <div class="banner" style="margin-top: 12px;">
-              <strong>建议打开方式：</strong><br />
-              直接双击 `index.html` 或者用浏览器打开本地文件，不需要启动任何服务。
+              <strong>当前页面地址：</strong><br />
+              <span id="pageUrl"></span>
+            </div>
+            <div class="row" style="margin-top: 10px;">
+              <button class="btn secondary" id="copyUrlBtn">复制页面链接</button>
             </div>
           </section>
         </aside>
@@ -586,6 +589,7 @@
         confirmBtn: document.getElementById("confirmBtn"),
         resetBtn: document.getElementById("resetBtn"),
         copyBtn: document.getElementById("copyBtn"),
+        copyUrlBtn: document.getElementById("copyUrlBtn"),
         statusText: document.getElementById("statusText"),
         voteTotal: document.getElementById("voteTotal"),
         leaderText: document.getElementById("leaderText"),
@@ -593,6 +597,7 @@
         summaryList: document.getElementById("summaryList"),
         modePill: document.getElementById("modePill"),
         banner: document.getElementById("banner"),
+        pageUrl: document.getElementById("pageUrl"),
         toast: document.getElementById("toast"),
       };
 
@@ -672,7 +677,7 @@
                 <div class="desc">${tool.hint}</div>
                 <div class="meta">
                   <span class="count"><strong>${count}</strong><span>票</span></span>
-                  <span class="pill">${count ? "已投" : state.running ? "点一下投票" : "先开始演示"}</span>
+                  <span class="pill">${count ? "已投" : state.running ? "点一下投票" : "等待开启"}</span>
                 </div>
                 <div class="actions">
                   <button class="btn primary" data-action="toggle" data-id="${tool.id}" ${state.running && !state.confirmed ? "" : "disabled"}>${count ? "取消投票" : "投票"}</button>
@@ -735,17 +740,18 @@
         els.voteTotal.textContent = String(totalVotes());
         els.leaderText.textContent = leaderName();
         els.confirmText.textContent = state.confirmed ? "已确认" : "未确认";
-        els.modePill.textContent = state.running ? "离线本地模式 · 可演示" : "离线本地模式 · 先开始";
+        els.modePill.textContent = state.running ? "扫码投票模式 · 进行中" : "扫码投票模式 · 等待开启";
+        els.pageUrl.textContent = location.href;
         els.banner.innerHTML = state.running
           ? state.confirmed
             ? "<strong>已确认当前顺序。</strong> 下面的排行就是最终讲解顺序。"
             : "<strong>进行中：</strong> 点一下投票，再点一次取消；主持人最后再确认。"
-          : "<strong>未开始：</strong> 先点“开始演示”，再进行现场讲解。";
+          : "<strong>未开始：</strong> 请主持人先点“开始投票”，观众扫码后即可参与。";
       }
 
       function vote(id) {
         if (!state.running || state.confirmed) {
-          toast("先开始演示");
+          toast("请先开启投票");
           return;
         }
 
@@ -802,6 +808,15 @@
         }
       }
 
+      async function copyUrl() {
+        try {
+          await navigator.clipboard.writeText(location.href);
+          toast("页面链接已复制");
+        } catch {
+          toast("复制失败，请手动复制页面地址");
+        }
+      }
+
       function render() {
         renderTools();
         renderRankings();
@@ -813,6 +828,7 @@
       els.confirmBtn.addEventListener("click", confirmRanking);
       els.resetBtn.addEventListener("click", resetDemo);
       els.copyBtn.addEventListener("click", copyResult);
+      els.copyUrlBtn.addEventListener("click", copyUrl);
 
       render();
     </script>
