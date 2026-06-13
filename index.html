@@ -516,53 +516,6 @@
           </div>
         </section>
 
-        <aside class="panel side">
-          <section class="card">
-            <div class="card-head">
-              <div>
-                <h2>主持人后台</h2>
-                <p>只保留必要控制，适合现场控场。</p>
-              </div>
-            </div>
-            <div class="row" style="margin-top: 14px;">
-              <button class="btn primary" id="startBtn">开始投票</button>
-              <button class="btn secondary" id="endBtn">结束投票</button>
-            </div>
-            <div class="row" style="margin-top: 10px;">
-              <button class="btn secondary" id="confirmBtn">确认当前排行</button>
-              <button class="btn ghost" id="resetBtn">清空重来</button>
-            </div>
-            <div class="row" style="margin-top: 10px;">
-              <button class="btn secondary" id="copyBtn">复制结果</button>
-            </div>
-          </section>
-
-          <section class="card">
-            <div class="card-head">
-              <div>
-                <h2>主持人摘要</h2>
-                <p>快速看当前局面，现场不会慌。</p>
-              </div>
-            </div>
-            <div class="summary" id="summaryList"></div>
-          </section>
-
-          <section class="card">
-            <div class="card-head">
-              <div>
-                <h2>扫码入口</h2>
-                <p>把这个地址发给观众，或做成二维码投屏展示。</p>
-              </div>
-            </div>
-            <div class="banner" style="margin-top: 12px;">
-              <strong>当前页面地址：</strong><br />
-              <span id="pageUrl"></span>
-            </div>
-            <div class="row" style="margin-top: 10px;">
-              <button class="btn secondary" id="copyUrlBtn">复制页面链接</button>
-            </div>
-          </section>
-        </aside>
       </div>
     </main>
 
@@ -594,20 +547,12 @@
       const els = {
         toolGrid: document.getElementById(“toolGrid”),
         rankingList: document.getElementById(“rankingList”),
-        startBtn: document.getElementById(“startBtn”),
-        endBtn: document.getElementById(“endBtn”),
-        confirmBtn: document.getElementById(“confirmBtn”),
-        resetBtn: document.getElementById(“resetBtn”),
-        copyBtn: document.getElementById(“copyBtn”),
-        copyUrlBtn: document.getElementById(“copyUrlBtn”),
         statusText: document.getElementById(“statusText”),
         voteTotal: document.getElementById(“voteTotal”),
         leaderText: document.getElementById(“leaderText”),
         confirmText: document.getElementById(“confirmText”),
-        summaryList: document.getElementById(“summaryList”),
         modePill: document.getElementById(“modePill”),
         banner: document.getElementById(“banner”),
-        pageUrl: document.getElementById(“pageUrl”),
         toast: document.getElementById(“toast”),
       };
 
@@ -690,24 +635,16 @@
       function renderSummary() {
         const label = statusLabel();
         const total = totalVotes();
-        els.summaryList.innerHTML = [
-          [“演示状态”, label],
-          [“有效票数”, String(total)],
-          [“当前领先”, leaderName()],
-          [“确认状态”, sState.confirmed ? “已确认” : “未确认”],
-        ].map(([k, v]) => `<div class=”summary-item”><b>${k}</b><span>${v}</span></div>`).join(“”);
-
-        els.statusText.textContent = label;
-        els.voteTotal.textContent = String(total);
-        els.leaderText.textContent = leaderName();
-        els.confirmText.textContent = sState.confirmed ? “已确认” : “未确认”;
-        els.modePill.textContent = sState.running ? “扫码投票模式 · 进行中” : “扫码投票模式 · 等待开启”;
-        els.pageUrl.textContent = location.href;
-        els.banner.innerHTML = sState.running
+        if (els.statusText) els.statusText.textContent = label;
+        if (els.voteTotal) els.voteTotal.textContent = String(total);
+        if (els.leaderText) els.leaderText.textContent = leaderName();
+        if (els.confirmText) els.confirmText.textContent = sState.confirmed ? “已确认” : “未确认”;
+        if (els.modePill) els.modePill.textContent = sState.running ? “扫码投票模式 · 进行中” : “扫码投票模式 · 等待开启”;
+        if (els.banner) els.banner.innerHTML = sState.running
           ? sState.confirmed
             ? “<strong>已确认当前顺序。</strong> 下面的排行就是最终讲解顺序。”
-            : “<strong>进行中：</strong> 每人只能投一票，选最想了解的工具；主持人最后确认。”
-          : “<strong>未开始：</strong> 请主持人先点「开始投票」，观众扫码后即可参与。”;
+            : “<strong>进行中：</strong> 每人只能投一票，选最想了解的工具。”
+          : “<strong>未开始：</strong> 等主持人开启投票后即可参与。”;
       }
 
       function render() {
@@ -742,44 +679,6 @@
         } catch { toast(“网络错误，请重试”); }
       }
 
-      // 主持人后台操作，全部走服务器 API
-      async function callApi(path, body) {
-        const res = await fetch(path, {
-          method: “POST”,
-          headers: { “content-type”: “application/json” },
-          body: JSON.stringify(body),
-        });
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const { state: s } = await res.json();
-        applyServerState(s);
-      }
-
-      els.startBtn.addEventListener(“click”, async () => {
-        try { await callApi(“/api/start”, { roomId: ROOM_ID }); toast(“投票已开始”); }
-        catch { toast(“启动失败”); }
-      });
-      els.endBtn.addEventListener(“click”, async () => {
-        try { await callApi(“/api/end”, { roomId: ROOM_ID }); toast(“投票已结束”); }
-        catch { toast(“操作失败”); }
-      });
-      els.confirmBtn.addEventListener(“click”, async () => {
-        try { await callApi(“/api/confirm”, { roomId: ROOM_ID }); toast(“已确认当前排行”); }
-        catch { toast(“操作失败”); }
-      });
-      els.resetBtn.addEventListener(“click”, async () => {
-        try { await callApi(“/api/reset”, { roomId: ROOM_ID }); toast(“已清空”); }
-        catch { toast(“操作失败”); }
-      });
-      els.copyBtn.addEventListener(“click”, async () => {
-        const text = sortedTools().map((t, i) => `${i + 1}. ${t.name}（${sState.votes[t.id] || 0} 票）`).join(“\n”);
-        try { await navigator.clipboard.writeText(text); toast(“结果已复制”); }
-        catch { toast(“复制失败”); }
-      });
-      els.copyUrlBtn.addEventListener(“click”, async () => {
-        try { await navigator.clipboard.writeText(location.href); toast(“页面链接已复制”); }
-        catch { toast(“复制失败，请手动复制”); }
-      });
-
       // 实时轮询服务器状态（2 秒一次）
       let syncTimer = null;
       async function syncFromServer() {
@@ -790,6 +689,7 @@
           applyServerState(s);
         } catch {}
       }
+      render(); // 先渲染一次，不等服务器响应
       syncFromServer();
       syncTimer = setInterval(syncFromServer, 2000);
     </script>
