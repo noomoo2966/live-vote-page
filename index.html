@@ -442,6 +442,98 @@
         transform: translateX(-50%) translateY(0);
       }
 
+      /* ── 状态横幅 ── */
+      #stateBanner {
+        margin-top: 20px;
+        padding: 16px 20px;
+        border-radius: var(--radius-lg);
+        border: 1.5px solid transparent;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        transition: background 500ms ease, border-color 500ms ease;
+      }
+      .state-dot {
+        width: 13px; height: 13px;
+        border-radius: 50%;
+        flex-shrink: 0;
+        transition: background 400ms ease, box-shadow 400ms ease;
+      }
+      .state-text { flex: 1; }
+      .state-label {
+        font-size: 18px;
+        font-weight: 800;
+        letter-spacing: -0.02em;
+        line-height: 1.2;
+        transition: color 400ms ease;
+      }
+      .state-sub {
+        font-size: 13px;
+        color: var(--muted);
+        margin-top: 3px;
+        line-height: 1.5;
+      }
+      .state-total {
+        font-size: 13px;
+        color: var(--muted);
+        white-space: nowrap;
+      }
+      .state-total strong { font-size: 22px; color: var(--text); display: block; text-align: right; }
+
+      /* waiting */
+      body[data-state="waiting"] #stateBanner {
+        background: rgba(92, 107, 125, 0.09);
+        border-color: rgba(92, 107, 125, 0.18);
+      }
+      body[data-state="waiting"] .state-dot { background: #b0bec5; }
+      body[data-state="waiting"] .state-label { color: var(--muted); }
+      body[data-state="waiting"] .grid {
+        opacity: 0.4;
+        filter: grayscale(0.5);
+        pointer-events: none;
+      }
+      body[data-state="waiting"] .rankings { opacity: 0.4; }
+
+      /* running */
+      body[data-state="running"] {
+        background:
+          radial-gradient(circle at 14% 16%, rgba(23, 105, 209, 0.22), transparent 28%),
+          radial-gradient(circle at 86% 14%, rgba(18, 167, 184, 0.22), transparent 26%),
+          radial-gradient(circle at 20% 82%, rgba(23, 138, 87, 0.12), transparent 30%),
+          linear-gradient(135deg, #e4eef9, #cfe4f7);
+      }
+      body[data-state="running"] #stateBanner {
+        background: linear-gradient(135deg, rgba(23, 105, 209, 0.13), rgba(18, 167, 184, 0.09));
+        border-color: rgba(23, 105, 209, 0.35);
+      }
+      body[data-state="running"] .state-dot {
+        background: var(--accent);
+        box-shadow: 0 0 0 5px rgba(23, 105, 209, 0.18);
+        animation: dotPulse 1.6s ease infinite;
+      }
+      body[data-state="running"] .state-label { color: var(--accent); }
+
+      /* ended */
+      body[data-state="ended"] #stateBanner {
+        background: rgba(23, 138, 87, 0.09);
+        border-color: rgba(23, 138, 87, 0.28);
+      }
+      body[data-state="ended"] .state-dot { background: var(--success); }
+      body[data-state="ended"] .state-label { color: var(--success); }
+      body[data-state="ended"] .grid { opacity: 0.45; pointer-events: none; }
+
+      @keyframes dotPulse {
+        0%, 100% { box-shadow: 0 0 0 4px rgba(23, 105, 209, 0.18); }
+        50%       { box-shadow: 0 0 0 10px rgba(23, 105, 209, 0.04); }
+      }
+
+      /* 已投票的卡片高亮 */
+      .tool.voted {
+        border-color: rgba(23, 105, 209, 0.45);
+        background: rgba(23, 105, 209, 0.07);
+        box-shadow: 0 0 0 2px rgba(23, 105, 209, 0.14);
+      }
+
       @media (max-width: 1120px) {
         .layout { grid-template-columns: 1fr; }
         .main { min-height: auto; }
@@ -478,22 +570,22 @@
             </p>
           </header>
 
-          <div class="status-row">
-            <div class="chip live">状态：<strong id="statusText">未开始</strong></div>
-            <div class="chip">总票数：<strong id="voteTotal">0</strong></div>
-            <div class="chip">当前领先：<strong id="leaderText">等待开始</strong></div>
-            <div class="chip">结果：<strong id="confirmText">未确认</strong></div>
-          </div>
-
-          <div class="banner" id="banner">
-            <strong>扫码提示：</strong>让观众扫描当前页面地址进入投票，先选最想了解的工具，结果会实时同步到这里。
+          <div id="stateBanner">
+            <div class="state-dot"></div>
+            <div class="state-text">
+              <div class="state-label" id="stateLabel">等待开始</div>
+              <div class="state-sub" id="stateSub">请稍候，主持人即将开启投票</div>
+            </div>
+            <div class="state-total">
+              <strong id="voteTotal">0</strong>票
+            </div>
           </div>
 
           <div class="section">
             <div class="section-head">
               <div>
                 <h2>投票区</h2>
-                <p>每人一票，点一下投票，再点一次取消投票。</p>
+                <p>每人只能投一票，投票后可换选其他选项。</p>
               </div>
               <div class="pill" id="modePill">扫码投票模式</div>
             </div>
@@ -547,12 +639,10 @@
       const els = {
         toolGrid: document.getElementById("toolGrid"),
         rankingList: document.getElementById("rankingList"),
-        statusText: document.getElementById("statusText"),
+        stateLabel: document.getElementById("stateLabel"),
+        stateSub: document.getElementById("stateSub"),
         voteTotal: document.getElementById("voteTotal"),
-        leaderText: document.getElementById("leaderText"),
-        confirmText: document.getElementById("confirmText"),
         modePill: document.getElementById("modePill"),
-        banner: document.getElementById("banner"),
         toast: document.getElementById("toast"),
       };
 
@@ -633,18 +723,26 @@
       }
 
       function renderSummary() {
-        const label = statusLabel();
         const total = totalVotes();
-        if (els.statusText) els.statusText.textContent = label;
         if (els.voteTotal) els.voteTotal.textContent = String(total);
-        if (els.leaderText) els.leaderText.textContent = leaderName();
-        if (els.confirmText) els.confirmText.textContent = sState.confirmed ? "已确认" : "未确认";
         if (els.modePill) els.modePill.textContent = sState.running ? "扫码投票模式 · 进行中" : "扫码投票模式 · 等待开启";
-        if (els.banner) els.banner.innerHTML = sState.running
-          ? sState.confirmed
-            ? "<strong>已确认当前顺序。</strong> 下面的排行就是最终讲解顺序。"
-            : "<strong>进行中：</strong> 每人只能投一票，选最想了解的工具。"
-          : "<strong>未开始：</strong> 等主持人开启投票后即可参与。";
+
+        // 状态横幅
+        if (sState.running) {
+          document.body.dataset.state = "running";
+          if (els.stateLabel) els.stateLabel.textContent = "投票进行中";
+          if (els.stateSub) els.stateSub.textContent = sState.myVote
+            ? "你已投票，可点击其他选项换票"
+            : "每人只能投一票，选一个你最想先了解的工具";
+        } else if (sState.ended) {
+          document.body.dataset.state = "ended";
+          if (els.stateLabel) els.stateLabel.textContent = "投票已结束";
+          if (els.stateSub) els.stateSub.textContent = "感谢参与！请看屏幕上的最终排行";
+        } else {
+          document.body.dataset.state = "waiting";
+          if (els.stateLabel) els.stateLabel.textContent = "等待主持人开启投票";
+          if (els.stateSub) els.stateSub.textContent = "请稍候，投票即将开始";
+        }
       }
 
       function render() {
