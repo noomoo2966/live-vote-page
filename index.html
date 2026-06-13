@@ -522,22 +522,22 @@
     <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
     <script>
-      const ROOM_ID = “LIVE”;
+      const ROOM_ID = "LIVE";
       const tools = [
-        { id: 1, name: “报价单生成器”, hint: “快速出报价” },
-        { id: 2, name: “装箱计算器 / 柜型建议器”, hint: “算体积与装柜” },
-        { id: 3, name: “质量计算小工具”, hint: “快速算参数” },
-        { id: 4, name: “铭牌参数生成器”, hint: “参数一键成文” },
-        { id: 5, name: “电子签报销单 + 对账工具”, hint: “签单报销一体” },
-        { id: 6, name: “面试通知 + 流程管理工具”, hint: “流程更顺” },
-        { id: 7, name: “制度问答小助手”, hint: “查制度更快” },
+        { id: 1, name: "报价单生成器", hint: "快速出报价" },
+        { id: 2, name: "装箱计算器 / 柜型建议器", hint: "算体积与装柜" },
+        { id: 3, name: "质量计算小工具", hint: "快速算参数" },
+        { id: 4, name: "铭牌参数生成器", hint: "参数一键成文" },
+        { id: 5, name: "电子签报销单 + 对账工具", hint: "签单报销一体" },
+        { id: 6, name: "面试通知 + 流程管理工具", hint: "流程更顺" },
+        { id: 7, name: "制度问答小助手", hint: "查制度更快" },
       ];
 
       // 每台设备一个固定 voterId，确保一人一票
-      const VOTER_ID_KEY = “live-vote:voterId”;
+      const VOTER_ID_KEY = "live-vote:voterId";
       let voterId = localStorage.getItem(VOTER_ID_KEY);
       if (!voterId) {
-        voterId = “v-” + Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
+        voterId = "v-" + Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
         localStorage.setItem(VOTER_ID_KEY, voterId);
       }
 
@@ -545,22 +545,22 @@
       let sState = { running: false, ended: false, confirmed: false, votes: {}, myVote: null };
 
       const els = {
-        toolGrid: document.getElementById(“toolGrid”),
-        rankingList: document.getElementById(“rankingList”),
-        statusText: document.getElementById(“statusText”),
-        voteTotal: document.getElementById(“voteTotal”),
-        leaderText: document.getElementById(“leaderText”),
-        confirmText: document.getElementById(“confirmText”),
-        modePill: document.getElementById(“modePill”),
-        banner: document.getElementById(“banner”),
-        toast: document.getElementById(“toast”),
+        toolGrid: document.getElementById("toolGrid"),
+        rankingList: document.getElementById("rankingList"),
+        statusText: document.getElementById("statusText"),
+        voteTotal: document.getElementById("voteTotal"),
+        leaderText: document.getElementById("leaderText"),
+        confirmText: document.getElementById("confirmText"),
+        modePill: document.getElementById("modePill"),
+        banner: document.getElementById("banner"),
+        toast: document.getElementById("toast"),
       };
 
       function toast(message) {
         els.toast.textContent = message;
-        els.toast.classList.add(“show”);
+        els.toast.classList.add("show");
         clearTimeout(toast._t);
-        toast._t = setTimeout(() => els.toast.classList.remove(“show”), 1800);
+        toast._t = setTimeout(() => els.toast.classList.remove("show"), 1800);
       }
 
       function totalVotes() {
@@ -576,15 +576,15 @@
 
       function leaderName() {
         const top = sortedTools()[0];
-        if (!top || (sState.votes[top.id] || 0) === 0) return “等待开始”;
+        if (!top || (sState.votes[top.id] || 0) === 0) return "等待开始";
         return top.name;
       }
 
       function statusLabel() {
-        if (!sState.running && !sState.ended) return “未开始”;
-        if (sState.ended) return “已结束”;
-        if (sState.confirmed) return “已确认”;
-        return “进行中”;
+        if (!sState.running && !sState.ended) return "未开始";
+        if (sState.ended) return "已结束";
+        if (sState.confirmed) return "已确认";
+        return "进行中";
       }
 
       function renderTools() {
@@ -592,22 +592,22 @@
         els.toolGrid.innerHTML = tools.map((tool) => {
           const count = sState.votes[tool.id] || 0;
           const isMyVote = sState.myVote === tool.id;
-          return `<article class=”tool${isMyVote ? “ voted” : “”}”>
-            <span class=”num”>${tool.id}</span>
+          return `<article class="tool${isMyVote ? " voted" : ""}">
+            <span class="num">${tool.id}</span>
             <h3>${tool.name}</h3>
-            <div class=”desc”>${tool.hint}</div>
-            <div class=”meta”>
-              <span class=”count”><strong>${count}</strong><span>票</span></span>
-              <span class=”pill”>${isMyVote ? “✓ 已投” : canVote ? “点一下投票” : “等待开启”}</span>
+            <div class="desc">${tool.hint}</div>
+            <div class="meta">
+              <span class="count"><strong>${count}</strong><span>票</span></span>
+              <span class="pill">${isMyVote ? "✓ 已投" : canVote ? "点一下投票" : "等待开启"}</span>
             </div>
-            <div class=”actions”>
-              <button class=”btn ${isMyVote ? “secondary” : “primary”}” data-id=”${tool.id}”
-                ${canVote && !isMyVote ? “” : “disabled”}>${isMyVote ? “已投票” : “投票”}</button>
+            <div class="actions">
+              <button class="btn ${isMyVote ? "secondary" : "primary"}" data-id="${tool.id}"
+                ${canVote && !isMyVote ? "" : "disabled"}>${isMyVote ? "已投票" : "投票"}</button>
             </div>
           </article>`;
-        }).join(“”);
-        els.toolGrid.querySelectorAll(“button[data-id]”).forEach((btn) => {
-          btn.addEventListener(“click”, () => vote(Number(btn.dataset.id)));
+        }).join("");
+        els.toolGrid.querySelectorAll("button[data-id]").forEach((btn) => {
+          btn.addEventListener("click", () => vote(Number(btn.dataset.id)));
         });
       }
 
@@ -618,18 +618,18 @@
         els.rankingList.innerHTML = ordered.map((tool, i) => {
           const count = sState.votes[tool.id] || 0;
           const pct = (count / max) * 100;
-          return `<section class=”rank” style=”--pct:${Math.max(pct, count ? 8 : 0)}”>
-            <div class=”no”>${i + 1}</div>
+          return `<section class="rank" style="--pct:${Math.max(pct, count ? 8 : 0)}">
+            <div class="no">${i + 1}</div>
             <div>
               <h3>${tool.name}</h3>
-              <div class=”info”>
+              <div class="info">
                 <span>编号 ${tool.id}</span>
                 <span>支持率 ${total ? Math.round((count / total) * 100) : 0}%</span>
               </div>
             </div>
-            <div class=”value”><strong>${count}</strong><span>票</span></div>
+            <div class="value"><strong>${count}</strong><span>票</span></div>
           </section>`;
-        }).join(“”);
+        }).join("");
       }
 
       function renderSummary() {
@@ -638,13 +638,13 @@
         if (els.statusText) els.statusText.textContent = label;
         if (els.voteTotal) els.voteTotal.textContent = String(total);
         if (els.leaderText) els.leaderText.textContent = leaderName();
-        if (els.confirmText) els.confirmText.textContent = sState.confirmed ? “已确认” : “未确认”;
-        if (els.modePill) els.modePill.textContent = sState.running ? “扫码投票模式 · 进行中” : “扫码投票模式 · 等待开启”;
+        if (els.confirmText) els.confirmText.textContent = sState.confirmed ? "已确认" : "未确认";
+        if (els.modePill) els.modePill.textContent = sState.running ? "扫码投票模式 · 进行中" : "扫码投票模式 · 等待开启";
         if (els.banner) els.banner.innerHTML = sState.running
           ? sState.confirmed
-            ? “<strong>已确认当前顺序。</strong> 下面的排行就是最终讲解顺序。”
-            : “<strong>进行中：</strong> 每人只能投一票，选最想了解的工具。”
-          : “<strong>未开始：</strong> 等主持人开启投票后即可参与。”;
+            ? "<strong>已确认当前顺序。</strong> 下面的排行就是最终讲解顺序。"
+            : "<strong>进行中：</strong> 每人只能投一票，选最想了解的工具。"
+          : "<strong>未开始：</strong> 等主持人开启投票后即可参与。";
       }
 
       function render() {
@@ -664,26 +664,26 @@
 
       // 一人一票：POST /api/vote，服务器自动处理换票
       async function vote(id) {
-        if (!sState.running || sState.ended) { toast(“请先开启投票”); return; }
+        if (!sState.running || sState.ended) { toast("请先开启投票"); return; }
         if (sState.myVote === id) return;
         try {
-          const res = await fetch(“/api/vote”, {
-            method: “POST”,
-            headers: { “content-type”: “application/json” },
+          const res = await fetch("/api/vote", {
+            method: "POST",
+            headers: { "content-type": "application/json" },
             body: JSON.stringify({ roomId: ROOM_ID, voterId, toolId: id }),
           });
-          if (!res.ok) { toast(“投票失败，请重试”); return; }
+          if (!res.ok) { toast("投票失败，请重试"); return; }
           const { state: s } = await res.json();
           applyServerState(s);
-          toast(“已投票”);
-        } catch { toast(“网络错误，请重试”); }
+          toast("已投票");
+        } catch { toast("网络错误，请重试"); }
       }
 
       // 实时轮询服务器状态（2 秒一次）
       let syncTimer = null;
       async function syncFromServer() {
         try {
-          const res = await fetch(`/api/state?roomId=${ROOM_ID}`, { cache: “no-store” });
+          const res = await fetch(`/api/state?roomId=${ROOM_ID}`, { cache: "no-store" });
           if (!res.ok) return;
           const { state: s } = await res.json();
           applyServerState(s);
