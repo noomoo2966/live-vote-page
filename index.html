@@ -831,6 +831,29 @@
       els.copyUrlBtn.addEventListener("click", copyUrl);
 
       render();
+
+      // 同步服务器投票状态：启动时读一次，未开始时持续轮询
+      let syncTimer = null;
+      async function syncFromServer() {
+        try {
+          const res = await fetch('/api/state?roomId=LIVE', { cache: 'no-store' });
+          if (!res.ok) return;
+          const { state: s } = await res.json();
+          if (s.started && !s.ended && !state.running) {
+            state.running = true;
+            saveState();
+            render();
+          } else if (s.ended && state.running) {
+            state.running = false;
+            saveState();
+            render();
+          }
+          // 投票结束后停止轮询
+          if (s.ended) { clearInterval(syncTimer); syncTimer = null; }
+        } catch {}
+      }
+      syncFromServer();
+      syncTimer = setInterval(syncFromServer, 2000);
     </script>
   </body>
 </html>

@@ -382,7 +382,8 @@ const server = http.createServer(async (req, res) => {
       res.writeHead(200, {
         "content-type": "text/event-stream; charset=utf-8",
         "cache-control": "no-cache, no-transform",
-        connection: "keep-alive",
+        "connection": "keep-alive",
+        "access-control-allow-origin": "*",
       });
       res.write(`data: ${JSON.stringify({ state: publicState(room) })}\n\n`);
       room.subscribers.add(res);
