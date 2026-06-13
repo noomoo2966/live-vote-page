@@ -569,252 +569,145 @@
     <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
     <script>
+      const ROOM_ID = “LIVE”;
       const tools = [
-        { id: 1, name: "报价单生成器", hint: "快速出报价" },
-        { id: 2, name: "装箱计算器 / 柜型建议器", hint: "算体积与装柜" },
-        { id: 3, name: "质量计算小工具", hint: "快速算参数" },
-        { id: 4, name: "铭牌参数生成器", hint: "参数一键成文" },
-        { id: 5, name: "电子签报销单 + 对账工具", hint: "签单报销一体" },
-        { id: 6, name: "面试通知 + 流程管理工具", hint: "流程更顺" },
-        { id: 7, name: "制度问答小助手", hint: "查制度更快" },
+        { id: 1, name: “报价单生成器”, hint: “快速出报价” },
+        { id: 2, name: “装箱计算器 / 柜型建议器”, hint: “算体积与装柜” },
+        { id: 3, name: “质量计算小工具”, hint: “快速算参数” },
+        { id: 4, name: “铭牌参数生成器”, hint: “参数一键成文” },
+        { id: 5, name: “电子签报销单 + 对账工具”, hint: “签单报销一体” },
+        { id: 6, name: “面试通知 + 流程管理工具”, hint: “流程更顺” },
+        { id: 7, name: “制度问答小助手”, hint: “查制度更快” },
       ];
 
-      const STORAGE_KEY = "stable-vote-demo:v1";
+      // 每台设备一个固定 voterId，确保一人一票
+      const VOTER_ID_KEY = “live-vote:voterId”;
+      let voterId = localStorage.getItem(VOTER_ID_KEY);
+      if (!voterId) {
+        voterId = “v-” + Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
+        localStorage.setItem(VOTER_ID_KEY, voterId);
+      }
+
+      // 状态全部来自服务器
+      let sState = { running: false, ended: false, confirmed: false, votes: {}, myVote: null };
 
       const els = {
-        toolGrid: document.getElementById("toolGrid"),
-        rankingList: document.getElementById("rankingList"),
-        startBtn: document.getElementById("startBtn"),
-        endBtn: document.getElementById("endBtn"),
-        confirmBtn: document.getElementById("confirmBtn"),
-        resetBtn: document.getElementById("resetBtn"),
-        copyBtn: document.getElementById("copyBtn"),
-        copyUrlBtn: document.getElementById("copyUrlBtn"),
-        statusText: document.getElementById("statusText"),
-        voteTotal: document.getElementById("voteTotal"),
-        leaderText: document.getElementById("leaderText"),
-        confirmText: document.getElementById("confirmText"),
-        summaryList: document.getElementById("summaryList"),
-        modePill: document.getElementById("modePill"),
-        banner: document.getElementById("banner"),
-        pageUrl: document.getElementById("pageUrl"),
-        toast: document.getElementById("toast"),
+        toolGrid: document.getElementById(“toolGrid”),
+        rankingList: document.getElementById(“rankingList”),
+        startBtn: document.getElementById(“startBtn”),
+        endBtn: document.getElementById(“endBtn”),
+        confirmBtn: document.getElementById(“confirmBtn”),
+        resetBtn: document.getElementById(“resetBtn”),
+        copyBtn: document.getElementById(“copyBtn”),
+        copyUrlBtn: document.getElementById(“copyUrlBtn”),
+        statusText: document.getElementById(“statusText”),
+        voteTotal: document.getElementById(“voteTotal”),
+        leaderText: document.getElementById(“leaderText”),
+        confirmText: document.getElementById(“confirmText”),
+        summaryList: document.getElementById(“summaryList”),
+        modePill: document.getElementById(“modePill”),
+        banner: document.getElementById(“banner”),
+        pageUrl: document.getElementById(“pageUrl”),
+        toast: document.getElementById(“toast”),
       };
-
-      const blankVotes = () => Object.fromEntries(tools.map((tool) => [tool.id, 0]));
-
-      const loadState = () => {
-        const raw = localStorage.getItem(STORAGE_KEY);
-        if (!raw) {
-          return {
-            running: false,
-            confirmed: false,
-            votes: blankVotes(),
-          };
-        }
-        try {
-          const parsed = JSON.parse(raw);
-          return {
-            running: Boolean(parsed.running),
-            confirmed: Boolean(parsed.confirmed),
-            votes: { ...blankVotes(), ...(parsed.votes || {}) },
-          };
-        } catch {
-          return {
-            running: false,
-            confirmed: false,
-            votes: blankVotes(),
-          };
-        }
-      };
-
-      let state = loadState();
-
-      function saveState() {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-      }
 
       function toast(message) {
         els.toast.textContent = message;
-        els.toast.classList.add("show");
-        clearTimeout(toast.timer);
-        toast.timer = setTimeout(() => els.toast.classList.remove("show"), 1500);
+        els.toast.classList.add(“show”);
+        clearTimeout(toast._t);
+        toast._t = setTimeout(() => els.toast.classList.remove(“show”), 1800);
       }
 
       function totalVotes() {
-        return Object.values(state.votes).reduce((sum, value) => sum + value, 0);
+        return Object.values(sState.votes).reduce((s, v) => s + v, 0);
       }
 
       function sortedTools() {
         return [...tools].sort((a, b) => {
-          const diff = (state.votes[b.id] || 0) - (state.votes[a.id] || 0);
-          if (diff !== 0) return diff;
-          return a.id - b.id;
+          const diff = (sState.votes[b.id] || 0) - (sState.votes[a.id] || 0);
+          return diff !== 0 ? diff : a.id - b.id;
         });
       }
 
       function leaderName() {
-        const ordered = sortedTools();
-        const top = ordered[0];
-        if (!top || (state.votes[top.id] || 0) === 0) return "等待开始";
+        const top = sortedTools()[0];
+        if (!top || (sState.votes[top.id] || 0) === 0) return “等待开始”;
         return top.name;
       }
 
-      function setStatusText() {
-        if (!state.running) return "未开始";
-        if (state.confirmed) return "已确认";
-        return "进行中";
+      function statusLabel() {
+        if (!sState.running && !sState.ended) return “未开始”;
+        if (sState.ended) return “已结束”;
+        if (sState.confirmed) return “已确认”;
+        return “进行中”;
       }
 
       function renderTools() {
-        els.toolGrid.innerHTML = tools
-          .map((tool) => {
-            const count = state.votes[tool.id] || 0;
-            return `
-              <article class="tool">
-                <span class="num">${tool.id}</span>
-                <h3>${tool.name}</h3>
-                <div class="desc">${tool.hint}</div>
-                <div class="meta">
-                  <span class="count"><strong>${count}</strong><span>票</span></span>
-                  <span class="pill">${count ? "已投" : state.running ? "点一下投票" : "等待开启"}</span>
-                </div>
-                <div class="actions">
-                  <button class="btn primary" data-action="toggle" data-id="${tool.id}" ${state.running && !state.confirmed ? "" : "disabled"}>${count ? "取消投票" : "投票"}</button>
-                </div>
-              </article>
-            `;
-          })
-          .join("");
-
-        els.toolGrid.querySelectorAll("button[data-action]").forEach((button) => {
-          button.addEventListener("click", () => {
-            const id = Number(button.dataset.id);
-            const action = button.dataset.action;
-            if (action === "toggle") vote(id);
-          });
+        const canVote = sState.running && !sState.ended && !sState.confirmed;
+        els.toolGrid.innerHTML = tools.map((tool) => {
+          const count = sState.votes[tool.id] || 0;
+          const isMyVote = sState.myVote === tool.id;
+          return `<article class=”tool${isMyVote ? “ voted” : “”}”>
+            <span class=”num”>${tool.id}</span>
+            <h3>${tool.name}</h3>
+            <div class=”desc”>${tool.hint}</div>
+            <div class=”meta”>
+              <span class=”count”><strong>${count}</strong><span>票</span></span>
+              <span class=”pill”>${isMyVote ? “✓ 已投” : canVote ? “点一下投票” : “等待开启”}</span>
+            </div>
+            <div class=”actions”>
+              <button class=”btn ${isMyVote ? “secondary” : “primary”}” data-id=”${tool.id}”
+                ${canVote && !isMyVote ? “” : “disabled”}>${isMyVote ? “已投票” : “投票”}</button>
+            </div>
+          </article>`;
+        }).join(“”);
+        els.toolGrid.querySelectorAll(“button[data-id]”).forEach((btn) => {
+          btn.addEventListener(“click”, () => vote(Number(btn.dataset.id)));
         });
       }
 
       function renderRankings() {
         const ordered = sortedTools();
-        const max = Math.max(1, ...ordered.map((tool) => state.votes[tool.id] || 0));
-
-        els.rankingList.innerHTML = ordered
-          .map((tool, index) => {
-            const count = state.votes[tool.id] || 0;
-            const pct = (count / max) * 100;
-            return `
-              <section class="rank" style="--pct:${Math.max(pct, count ? 8 : 0)}">
-                <div class="no">${index + 1}</div>
-                <div>
-                  <h3>${tool.name}</h3>
-                  <div class="info">
-                    <span>编号 ${tool.id}</span>
-                    <span>支持率 ${totalVotes() ? Math.round((count / totalVotes()) * 100) : 0}%</span>
-                  </div>
-                </div>
-                <div class="value">
-                  <strong>${count}</strong>
-                  <span>票</span>
-                </div>
-              </section>
-            `;
-          })
-          .join("");
+        const max = Math.max(1, ...ordered.map((t) => sState.votes[t.id] || 0));
+        const total = totalVotes();
+        els.rankingList.innerHTML = ordered.map((tool, i) => {
+          const count = sState.votes[tool.id] || 0;
+          const pct = (count / max) * 100;
+          return `<section class=”rank” style=”--pct:${Math.max(pct, count ? 8 : 0)}”>
+            <div class=”no”>${i + 1}</div>
+            <div>
+              <h3>${tool.name}</h3>
+              <div class=”info”>
+                <span>编号 ${tool.id}</span>
+                <span>支持率 ${total ? Math.round((count / total) * 100) : 0}%</span>
+              </div>
+            </div>
+            <div class=”value”><strong>${count}</strong><span>票</span></div>
+          </section>`;
+        }).join(“”);
       }
 
       function renderSummary() {
-        const items = [
-          ["演示状态", setStatusText()],
-          ["有效票数", String(totalVotes())],
-          ["当前领先", leaderName()],
-          ["确认状态", state.confirmed ? "已确认" : "未确认"],
-        ];
+        const label = statusLabel();
+        const total = totalVotes();
+        els.summaryList.innerHTML = [
+          [“演示状态”, label],
+          [“有效票数”, String(total)],
+          [“当前领先”, leaderName()],
+          [“确认状态”, sState.confirmed ? “已确认” : “未确认”],
+        ].map(([k, v]) => `<div class=”summary-item”><b>${k}</b><span>${v}</span></div>`).join(“”);
 
-        els.summaryList.innerHTML = items
-          .map(([label, value]) => `<div class="summary-item"><b>${label}</b><span>${value}</span></div>`)
-          .join("");
-
-        els.statusText.textContent = setStatusText();
-        els.voteTotal.textContent = String(totalVotes());
+        els.statusText.textContent = label;
+        els.voteTotal.textContent = String(total);
         els.leaderText.textContent = leaderName();
-        els.confirmText.textContent = state.confirmed ? "已确认" : "未确认";
-        els.modePill.textContent = state.running ? "扫码投票模式 · 进行中" : "扫码投票模式 · 等待开启";
+        els.confirmText.textContent = sState.confirmed ? “已确认” : “未确认”;
+        els.modePill.textContent = sState.running ? “扫码投票模式 · 进行中” : “扫码投票模式 · 等待开启”;
         els.pageUrl.textContent = location.href;
-        els.banner.innerHTML = state.running
-          ? state.confirmed
-            ? "<strong>已确认当前顺序。</strong> 下面的排行就是最终讲解顺序。"
-            : "<strong>进行中：</strong> 点一下投票，再点一次取消；主持人最后再确认。"
-          : "<strong>未开始：</strong> 请主持人先点“开始投票”，观众扫码后即可参与。";
-      }
-
-      function vote(id) {
-        if (!state.running || state.confirmed) {
-          toast("请先开启投票");
-          return;
-        }
-
-        const next = state.votes[id] ? 0 : 1;
-        if (next === (state.votes[id] || 0)) return;
-        state.votes[id] = next;
-        saveState();
-        render();
-        toast(next ? "已投票" : "已取消");
-      }
-
-      function startDemo() {
-        state.running = true;
-        state.confirmed = false;
-        saveState();
-        render();
-        toast("演示已开始");
-      }
-
-      function endDemo() {
-        state.running = false;
-        saveState();
-        render();
-        toast("演示已结束");
-      }
-
-      function confirmRanking() {
-        state.confirmed = true;
-        saveState();
-        render();
-        toast("已确认当前排行");
-      }
-
-      function resetDemo() {
-        state = {
-          running: false,
-          confirmed: false,
-          votes: blankVotes(),
-        };
-        saveState();
-        render();
-        toast("已清空");
-      }
-
-      async function copyResult() {
-        const text = sortedTools()
-          .map((tool, index) => `${index + 1}. ${tool.name}（${state.votes[tool.id] || 0} 票）`)
-          .join("\n");
-        try {
-          await navigator.clipboard.writeText(text);
-          toast("结果已复制");
-        } catch {
-          toast("复制失败，结果已显示在页面中");
-        }
-      }
-
-      async function copyUrl() {
-        try {
-          await navigator.clipboard.writeText(location.href);
-          toast("页面链接已复制");
-        } catch {
-          toast("复制失败，请手动复制页面地址");
-        }
+        els.banner.innerHTML = sState.running
+          ? sState.confirmed
+            ? “<strong>已确认当前顺序。</strong> 下面的排行就是最终讲解顺序。”
+            : “<strong>进行中：</strong> 每人只能投一票，选最想了解的工具；主持人最后确认。”
+          : “<strong>未开始：</strong> 请主持人先点「开始投票」，观众扫码后即可参与。”;
       }
 
       function render() {
@@ -823,33 +716,78 @@
         renderSummary();
       }
 
-      els.startBtn.addEventListener("click", startDemo);
-      els.endBtn.addEventListener("click", endDemo);
-      els.confirmBtn.addEventListener("click", confirmRanking);
-      els.resetBtn.addEventListener("click", resetDemo);
-      els.copyBtn.addEventListener("click", copyResult);
-      els.copyUrlBtn.addEventListener("click", copyUrl);
+      function applyServerState(s) {
+        sState.running  = s.started && !s.ended;
+        sState.ended    = Boolean(s.ended);
+        sState.confirmed = Boolean(s.confirmedAt);
+        sState.votes    = s.votes || {};
+        sState.myVote   = (s.ballots && s.ballots[voterId]) ? Number(s.ballots[voterId]) : null;
+        render();
+      }
 
-      render();
+      // 一人一票：POST /api/vote，服务器自动处理换票
+      async function vote(id) {
+        if (!sState.running || sState.ended) { toast(“请先开启投票”); return; }
+        if (sState.myVote === id) return;
+        try {
+          const res = await fetch(“/api/vote”, {
+            method: “POST”,
+            headers: { “content-type”: “application/json” },
+            body: JSON.stringify({ roomId: ROOM_ID, voterId, toolId: id }),
+          });
+          if (!res.ok) { toast(“投票失败，请重试”); return; }
+          const { state: s } = await res.json();
+          applyServerState(s);
+          toast(“已投票”);
+        } catch { toast(“网络错误，请重试”); }
+      }
 
-      // 同步服务器投票状态：启动时读一次，未开始时持续轮询
+      // 主持人后台操作，全部走服务器 API
+      async function callApi(path, body) {
+        const res = await fetch(path, {
+          method: “POST”,
+          headers: { “content-type”: “application/json” },
+          body: JSON.stringify(body),
+        });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const { state: s } = await res.json();
+        applyServerState(s);
+      }
+
+      els.startBtn.addEventListener(“click”, async () => {
+        try { await callApi(“/api/start”, { roomId: ROOM_ID }); toast(“投票已开始”); }
+        catch { toast(“启动失败”); }
+      });
+      els.endBtn.addEventListener(“click”, async () => {
+        try { await callApi(“/api/end”, { roomId: ROOM_ID }); toast(“投票已结束”); }
+        catch { toast(“操作失败”); }
+      });
+      els.confirmBtn.addEventListener(“click”, async () => {
+        try { await callApi(“/api/confirm”, { roomId: ROOM_ID }); toast(“已确认当前排行”); }
+        catch { toast(“操作失败”); }
+      });
+      els.resetBtn.addEventListener(“click”, async () => {
+        try { await callApi(“/api/reset”, { roomId: ROOM_ID }); toast(“已清空”); }
+        catch { toast(“操作失败”); }
+      });
+      els.copyBtn.addEventListener(“click”, async () => {
+        const text = sortedTools().map((t, i) => `${i + 1}. ${t.name}（${sState.votes[t.id] || 0} 票）`).join(“\n”);
+        try { await navigator.clipboard.writeText(text); toast(“结果已复制”); }
+        catch { toast(“复制失败”); }
+      });
+      els.copyUrlBtn.addEventListener(“click”, async () => {
+        try { await navigator.clipboard.writeText(location.href); toast(“页面链接已复制”); }
+        catch { toast(“复制失败，请手动复制”); }
+      });
+
+      // 实时轮询服务器状态（2 秒一次）
       let syncTimer = null;
       async function syncFromServer() {
         try {
-          const res = await fetch('/api/state?roomId=LIVE', { cache: 'no-store' });
+          const res = await fetch(`/api/state?roomId=${ROOM_ID}`, { cache: “no-store” });
           if (!res.ok) return;
           const { state: s } = await res.json();
-          if (s.started && !s.ended && !state.running) {
-            state.running = true;
-            saveState();
-            render();
-          } else if (s.ended && state.running) {
-            state.running = false;
-            saveState();
-            render();
-          }
-          // 投票结束后停止轮询
-          if (s.ended) { clearInterval(syncTimer); syncTimer = null; }
+          applyServerState(s);
         } catch {}
       }
       syncFromServer();
