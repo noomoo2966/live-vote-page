@@ -16,8 +16,7 @@ const tools = [
   { id: 3, name: "质量计算小工具" },
   { id: 4, name: "铭牌参数生成器" },
   { id: 5, name: "电子签报销单 + 对账工具" },
-  { id: 6, name: "面试通知 + 流程管理工具" },
-  { id: 7, name: "制度问答小助手" },
+  { id: 6, name: "日程管理小助手" },
 ];
 
 const rooms = new Map();
