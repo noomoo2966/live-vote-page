@@ -17,6 +17,7 @@ const tools = [
   { id: 4, name: "铭牌参数生成器" },
   { id: 5, name: "电子签报销单 + 对账工具" },
   { id: 6, name: "日程管理小助手" },
+  { id: 7, name: "WhatsApp 翻译插件" },
 ];
 
 const rooms = new Map();
